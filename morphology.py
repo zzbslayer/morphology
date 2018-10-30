@@ -1,3 +1,18 @@
+'''
+Version 1.0
+Naive erosion and dilation
+---------
+Scan every value covered by kernel to get the max/min.
+---------
+
+========================================
+Version 1.1
+Optimize the speed of _singleErosion() and _singleDilation()
+---------
+Multiply the kernel and the square of the image to get the max/min
+---------
+'''
+
 import numpy as np
 from PIL import Image
 
