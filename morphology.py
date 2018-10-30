@@ -32,53 +32,36 @@ def _imageCategory(nparray):
         nparray - np.array of image
 
     Return Value:
-        Source image with padding of 0 of width 1 around it
+        Source image with padding around it.
+        The values of padding equal to the those of edge.
+        The size of padding is (row, col)
     
     Usage:
         padded = _padding(sourceImage)
 '''
-def _padding(nparray):
-    return np.pad(nparray, ((1, 1), (1, 1)), 'constant')
+def _padding(nparray, row, col):
+    return np.pad(nparray, ((row, row), (col, col)), 'edge')
 
 '''
     Function: 
-        _singleErosion(image, r, c, kernel)
+        _singleErosion(image, kernel)
 
     Parameter: 
-        image - np.array of source image
-        r - a specific row of source image
-        c - a specific column of source image
+        image - the square of source image whose size should equal to that of kernel
         kernel - kernel
 
     Return Value:
-        The erosion result of (r, c) in source image
+        The single point erosion result of input image
     
     Usage:
-        target[r][c] = _singleErosion(source, r, c, kernel)
+        target[r][c] = _singleErosion(square, kernel)
 '''
-def _singleErosion(image, r, c ,kernel):
-    maximum = 0
-    radiusX, radiusY = kernel.shape
-    imageX, imageY = image.shape
-    radiusX = int(radiusX/2)
-    radiusY = int(radiusY/2)
-    startX = r - radiusX
-    endX = r + radiusX
-    startY = c - radiusY
-    endY = c + radiusY
+def _singleErosion(image, kernel):
+    if (image.shape != kernel.shape):
+        return -12450
     
-    for i in range(startX, endX+1):
-        if (i < 0 or i >= imageX):
-            continue
-        for j in range(startY, endY+1):
-            if (j < 0 or j >= imageY):
-                continue
-            if (kernel[i-startX][j-startY] == 0):
-                continue
-            value = image[i][j]
-            if value > maximum:
-                maximum = value
-    return maximum
+    return np.max(image * kernel)
+
 
 '''
     Function: 
@@ -104,53 +87,35 @@ def erosion(image, kernel):
     '''
     Maybe there should be more validation
     '''  
+    kernelX, kernelY = kernel.shape
+    padded = _padding(image, kernelX, kernelY)
 
-    source = _padding(image)
-    target = np.zeros((source.shape))
-    for r, row in enumerate(source):
+    target = np.zeros((image.shape))
+    for r, row in enumerate(image):
         for c, column in enumerate(row):
-            target[r][c] = _singleErosion(source, r, c, kernel)
+            square = padded[r : r + kernelX, c : c + kernelY]
+            target[r][c] = _singleErosion(square, kernel)
     return target
 
 '''
     Function: 
-        _singleDilation(image, r, c, kernel)
+        _singleDilation(image, kernel)
 
     Parameter: 
-        image - np.array of source image
-        r - a specific row of source image
-        c - a specific column of source image
+        image - the square of source image whose size should equal to that of kernel
         kernel - kernel
 
     Return Value:
-        The dilation result of (r, c) in source image
+        The single point dilation result of input image
     
     Usage:
-        target[r][c] = _singleDilation(source, r, c, kernel)
+        target[r][c] = _singleDilation(square, kernel)
 '''
-def _singleDilation(image, r, c ,kernel):
-    minimum = 255
-    radiusX, radiusY = kernel.shape
-    imageX, imageY = image.shape
-    radiusX = int(radiusX/2)
-    radiusY = int(radiusY/2)
-    startX = r - radiusX
-    endX = r + radiusX
-    startY = c - radiusY
-    endY = c + radiusY
+def _singleDilation(image, kernel):
+    if (image.shape != kernel.shape):
+        return -12450
     
-    for i in range(startX, endX+1):
-        if (i < 0 or i >= imageX):
-            continue
-        for j in range(startY, endY+1):
-            if (j < 0 or j >= imageY):
-                continue
-            if (kernel[i-startX][j-startY] == 0):
-                continue
-            value = image[i][j]
-            if value < minimum:
-                minimum = value
-    return minimum
+    return np.min(image * kernel)
 
 '''
     Function: 
@@ -176,23 +141,48 @@ def dilation(image, kernel):
     '''
     Maybe there should be more validation
     '''  
+    kernelX, kernelY = kernel.shape
+    padded = _padding(image, kernelX, kernelY)
 
-    source = _padding(image)
-    target = np.zeros((source.shape))
-    for r, row in enumerate(source):
+    target = np.zeros((image.shape))
+    for r, row in enumerate(image):
         for c, column in enumerate(row):
-            target[r][c] = _singleDilation(source, r, c, kernel)
+            square = padded[r : r + kernelX, c : c + kernelY]
+            target[r][c] = _singleDilation(square, kernel)
     return target
 
+def iopen(image, kernel):
+    temp = erosion(image, kernel)
+    temp = dilation(temp, kernel)
+    return temp
+
+def iclose(image,kernel):
+    temp = dilation(image, kernel)
+    temp = erosion(image, kernel)
+    return temp
+
 if __name__ == '__main__':
-    sourceImage = Image.open("969fb5f8aecaf913a679139ef3de3438.jpg").convert('L')
+    sourceImage = Image.open("woman.jpg").convert('L')
     sourceImage.show()
     src = np.array(sourceImage)
 
     #kernel = np.array([[0,1,0],[1,1,1],[0,1,0]])
-    kernel = np.ones((21,21))
+    kernel = np.ones((3,3))
 
-    #tar = erosion(src, kernel)
-    tar = dilation(src,kernel)
-    target = Image.fromarray(tar)
-    target.show()
+    '''
+    ero = erosion(src, kernel)
+    erosion = Image.fromarray(ero)
+    erosion.show()
+
+    dil = dilation(ero,kernel)
+    dilation = Image.fromarray(dil)
+    dilation.show()
+    '''
+
+    temp = iopen(src, kernel)
+    temp = Image.fromarray(temp)
+    temp.show()
+
+    temp = iclose(src, kernel)
+    temp = Image.fromarray(temp)
+    temp.show()
