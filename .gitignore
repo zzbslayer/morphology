@@ -1,3 +1,4 @@
 *.jpg
 *.pdf
 *.pages
+__pycache__

@@ -1,4 +1,6 @@
 '''
+
+========================================
 Version 1.0
 Naive erosion and dilation
 ---------
@@ -9,10 +11,22 @@ Scan every value covered by kernel to get the max/min.
 Version 1.1
 Optimize the speed of _singleErosion() and _singleDilation()
 ---------
-Multiply the kernel and the square of the image to get the max/min
+Multiply the kernel and the square of the image, and then use np.max/np.min to get the max/min
 ---------
-'''
 
+========================================
+Version 1.2
+Fix wrong padding size
+---------
+before <===
+padded = _padding(image, kernelX, kernelY)
+
+after ===>
+padded = _padding(image, int(kernelX/2), int(kernelY/2))
+---------
+
+'''
+import argparse
 import numpy as np
 from PIL import Image
 
@@ -103,7 +117,7 @@ def erosion(image, kernel):
     Maybe there should be more validation
     '''  
     kernelX, kernelY = kernel.shape
-    padded = _padding(image, kernelX, kernelY)
+    padded = _padding(image, int(kernelX/2), int(kernelY/2))
 
     target = np.zeros((image.shape))
     for r, row in enumerate(image):
@@ -157,7 +171,7 @@ def dilation(image, kernel):
     Maybe there should be more validation
     '''  
     kernelX, kernelY = kernel.shape
-    padded = _padding(image, kernelX, kernelY)
+    padded = _padding(image, int(kernelX/2), int(kernelY/2))
 
     target = np.zeros((image.shape))
     for r, row in enumerate(image):
@@ -175,6 +189,12 @@ def iclose(image,kernel):
     temp = dilation(image, kernel)
     temp = erosion(image, kernel)
     return temp
+
+def parse_args():
+    parser = argparse.ArgumentParser("Erosion and Dilation")
+    parser.add_argument("--image", default='./image/woman.jpg',
+                        help="The path to the target image.")
+    return parser.parse_args()
 
 '''
     Note:
@@ -230,12 +250,13 @@ class test:
     def _show(self, image):
         img = Image.fromarray(image)
         img.show()
-        
 
 if __name__ == '__main__':
+    args = parse_args()
+    imagePath = args.image
     #kernel = np.array([[0,1,0],[1,1,1],[0,1,0]])
     kernel = np.ones((3,3))
-    testInstance = test("woman.jpg", kernel)
+    testInstance = test(imagePath, kernel)
 
-    testInstance.open()
-    testInstance.close()
+    testInstance.erosion()
+    testInstance.dilation()
