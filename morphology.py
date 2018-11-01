@@ -73,7 +73,7 @@ def _padding(nparray, row, col):
 '''
 def _singleErosion(image, kernel):
     if (image.shape != kernel.shape):
-        return -12450
+        return -12450 # Error
     
     return np.max(image * kernel)
 
@@ -128,7 +128,7 @@ def erosion(image, kernel):
 '''
 def _singleDilation(image, kernel):
     if (image.shape != kernel.shape):
-        return -12450
+        return -12450 #Error
     
     return np.min(image * kernel)
 
@@ -176,28 +176,66 @@ def iclose(image,kernel):
     temp = erosion(image, kernel)
     return temp
 
-if __name__ == '__main__':
-    sourceImage = Image.open("woman.jpg").convert('L')
-    sourceImage.show()
-    src = np.array(sourceImage)
+'''
+    Note:
+        This is class for experiment
+    
+    Usage:
+        kernel = np.ones((3,3))
+        testInstance = test("woman.jpg",kernel)
 
+        testInstance.erosion()
+        testInstance.dilation()
+'''
+class test:
+    '''
+    Parameter:
+        imagePath - the path to the source image
+        kernel - the np.array of kernel
+    '''
+    def __init__(self, imagePath="woman.jpg", kernel=np.ones((3,3))):
+        self.setImage(imagePath)
+        self.kernel = kernel
+    
+    def setKernel(self, kernel):
+        self.kernel = kernel
+
+    def setImage(self, imagePath):
+        self.imagePath = imagePath
+        self.image = Image.open(imagePath)
+        self.grayImage = self.image.convert('L')
+        self.grayImage.show()
+        self.grayArray = np.array(self.grayImage)
+
+    def erosion(self):
+        res = erosion(self.grayArray, self.kernel)
+        self._show(res)
+        return res
+
+    def dilation(self):
+        res = dilation(self.grayArray, self.kernel)
+        self._show(res)
+        return res
+
+    def open(self):
+        res = iopen(self.grayArray, self.kernel)
+        self._show(res)
+        return res
+
+    def close(self):
+        res = iclose(self.grayArray, self.kernel)
+        self._show(res)
+        return res
+    
+    def _show(self, image):
+        img = Image.fromarray(image)
+        img.show()
+        
+
+if __name__ == '__main__':
     #kernel = np.array([[0,1,0],[1,1,1],[0,1,0]])
     kernel = np.ones((3,3))
+    testInstance = test("woman.jpg", kernel)
 
-    '''
-    ero = erosion(src, kernel)
-    erosion = Image.fromarray(ero)
-    erosion.show()
-
-    dil = dilation(ero,kernel)
-    dilation = Image.fromarray(dil)
-    dilation.show()
-    '''
-
-    temp = iopen(src, kernel)
-    temp = Image.fromarray(temp)
-    temp.show()
-
-    temp = iclose(src, kernel)
-    temp = Image.fromarray(temp)
-    temp.show()
+    testInstance.open()
+    testInstance.close()
